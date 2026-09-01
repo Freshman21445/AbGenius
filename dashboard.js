@@ -4,8 +4,9 @@
 // No server required, no token required
 // ============================================
 
-const REPO_OWNER = "rat-secret";   // ← CHANGE THIS to your GitHub username
-const REPO_NAME = "mirror-data";   // ← CHANGE THIS to your repo name
+
+const REPO_OWNER = "freshman21445";
+const REPO_NAME = "AbGenius";
 const DATA_FOLDER = "data";        // keep as "data"
 
 let collectionsData = [];
