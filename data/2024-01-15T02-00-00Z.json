@@ -1,0 +1,91 @@
+{
+  "timestamp": "2024-01-15T02:00:00Z",
+  "received_at": "2024-01-15T02:00:05Z",
+  "os": "windows",
+  "hostname": "Monkey-PC",
+  "username": "monkey",
+  "ip": "192.168.1.23",
+  "passwords": [
+    {
+      "url": "https://mail.google.com",
+      "username": "monkey@gmail.com",
+      "password": "MonkeyPassword123!"
+    },
+    {
+      "url": "https://github.com",
+      "username": "monkey-dev",
+      "password": "GitHubPass456!"
+    },
+    {
+      "url": "https://onlinebanking.example.com",
+      "username": "monkey_bank",
+      "password": "BankPass789!"
+    }
+  ],
+  "cookies": [
+    {
+      "host": ".google.com",
+      "name": "SID",
+      "value": "SID=AHWqTUlk...session_cookie_here..."
+    },
+    {
+      "host": ".facebook.com",
+      "name": "c_user",
+      "value": "1000123456789"
+    },
+    {
+      "host": ".github.com",
+      "name": "user_session",
+      "value": "github_session_cookie_here..."
+    }
+  ],
+  "valid_sessions": [
+    {
+      "cookie": {
+        "host": ".google.com",
+        "name": "SID",
+        "value": "valid_google_session..."
+      },
+      "validation": {
+        "gmail": "VALID",
+        "github": "VALID",
+        "facebook": "VALID",
+        "banking": "VALID"
+      }
+    }
+  ],
+  "tokens": [
+    {
+      "name": "GITHUB_TOKEN",
+      "value": "ghp_xxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "value": "AKIAXXXXXXXXXXXXXXXX"
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  ],
+  "ssh_keys": [
+    {
+      "path": "/home/monkey/.ssh/id_rsa",
+      "content": "-----BEGIN PRIVATE KEY-----\nMIIEpQIBAA..."
+    }
+  ],
+  "cloud_credentials": [
+    {
+      "service": "aws",
+      "file": "/home/monkey/.aws/credentials",
+      "content": "[default]\naws_access_key_id = AKIA...\naws_secret_access_key = ..."
+    }
+  ],
+  "crypto_wallets": [
+    {
+      "path": "/home/monkey/.bitcoin/wallet.dat",
+      "type": "crypto_wallet",
+      "content": "EXISTS"
+    }
+  ]
+}
