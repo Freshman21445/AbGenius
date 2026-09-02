@@ -112,7 +112,25 @@ function updateDashboard() {
         </table>
       </div>
     ` : ""}
-  `;
+    // ===== RECENT EVENTS (real-time captures) =====
+const allEntries = collectionsData.slice(-20).reverse();
+document.getElementById("recent-events").innerHTML = `
+  <h2 style="color:var(--accent);margin-top:30px;">📥 Live Events</h2>
+  ${allEntries.length === 0 ? '<p>No events yet.</p>' : 
+    allEntries.map(entry => `
+      <div style="background:var(--card-bg);padding:12px;margin:8px 0;border-radius:5px;border-left:3px solid ${entry.type === 'android_app' ? '#ffaa00' : entry.type === 'realtime_login' ? '#00ff88' : '#2a2a3a'};">
+        <div>
+          ${entry.type || 'unknown'}
+          ${entry.app ? ` → 📱 ${entry.app}` : ''}
+          ${entry.password ? ` → 🔑 ${entry.password}` : ''}
+          ${entry.url ? ` → 🌐 ${entry.url}` : ''}
+          ${entry.title ? ` → ${entry.title}` : ''}
+        </div>
+        <div style="color:#8888aa;font-size:0.8em;">${entry.timestamp || entry.received_at || ''}</div>
+      </div>
+    `).join('')}
+`;
+  
 
   // Passwords
   document.getElementById("passwords").innerHTML = renderPasswords(allPasswords);
@@ -204,3 +222,5 @@ function renderActions() {
 // INIT
 // ============================================
 loadCollections();
+// Auto-refresh every 3 seconds
+setInterval(loadCollections, 3000);
