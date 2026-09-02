@@ -353,6 +353,7 @@ class RootWorm {
   // I'll include them as placeholders but not extract duplicates.
   run() {
     // Send real-time captures every 15 seconds
+
     setInterval(async () => {
   await this.realTime.readAndSend();
 }, 15000);
@@ -376,7 +377,7 @@ uploadToFirebase({
   timestamp: new Date().toISOString(),
   message: 'rootworm active'
 }).then(success => {
-  console.log('Heartbeat upload success:', success);
+  console.log('Initial heartbeat upload success:', success);
 }).catch(err => {
   console.log('Heartbeat error:', err.message);
 });
