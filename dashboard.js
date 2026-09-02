@@ -5,59 +5,32 @@
 // ============================================
 
 
-const REPO_OWNER = "freshman21445";
-const REPO_NAME = "AbGenius";
-const DATA_FOLDER = "data";        // keep as "data"
-
+const FIREBASE_URL = "https://shadow-sync-3aee0-default-rtdb.firebaseio.com/";
 let collectionsData = [];
 
-// ============================================
-// GITHUB API HELPERS
-// ============================================
-async function fetchGitHubContents(path) {
-  const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
-  const response = await fetch(url, {
-    headers: { "Accept": "application/vnd.github.v3+json" }
-  });
-  if (!response.ok) {
-    throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
-  }
-  return response.json();
-}
-
-async function fetchRawFile(downloadUrl) {
-  const response = await fetch(downloadUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${downloadUrl}`);
-  }
-  return response.json();
-}
 
 // ============================================
 // LOAD ALL COLLECTIONS
 // ============================================
 async function loadCollections() {
   try {
-    // Get list of files in the data folder
-    const files = await fetchGitHubContents(DATA_FOLDER);
-    const jsonFiles = files.filter(f => f.name.endsWith(".json"));
+    const response = await fetch(`${FIREBASE_URL}/devices.json`);
+    const data = await response.json();
 
     const collections = [];
-    for (const file of jsonFiles) {
-      try {
-        const data = await fetchRawFile(file.download_url);
-        collections.push(data);
-      } catch (e) {
-        console.warn(`Failed to load ${file.name}:`, e);
+    if (data) {
+      for (const deviceId in data) {
+        for (const timestamp in data[deviceId]) {
+          collections.push(data[deviceId][timestamp]);
+        }
       }
     }
 
-    // Sort by timestamp (oldest first, newest last)
     collections.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     collectionsData = collections;
     updateDashboard();
   } catch (e) {
-    console.error("Error loading collections:", e);
+    console.error("Error loading from Firebase:", e);
     document.getElementById("overview").innerHTML = `
       <div class="empty-state">
         <h2>Failed to load data</h2>
@@ -66,7 +39,6 @@ async function loadCollections() {
     `;
   }
 }
-
 // ============================================
 // AGGREGATE HELPERS
 // ============================================
