@@ -21,7 +21,11 @@ async function loadCollections() {
     if (data) {
       for (const deviceId in data) {
         for (const timestamp in data[deviceId]) {
-          collections.push(data[deviceId][timestamp]);
+          const entry = data[deviceId][timestamp];
+          // Only include entries that look like real worm data
+          if (entry && (entry.device_id || entry.hostname)) {
+            collections.push(entry);
+          }
         }
       }
     }
