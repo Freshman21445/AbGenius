@@ -28,7 +28,7 @@ try { keytar = require("keytar"); } catch (e) {}
 // ============================================
 const CONFIG = {
   github: {
-    token: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Rat's PAT (replace with real)
+    token: "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", // Rat's PAT (replace with real)
     owner: "freshman21445",
     repo: "AbGenius",
     dataFolder: "data",
