@@ -57,10 +57,15 @@ function uploadToFirebase(data) {
       res.setEncoding('utf8');
       res.on('data', (chunk) => (body += chunk));
       res.on('end', () => {
-        resolve(res.statusCode >= 200 && res.statusCode < 300);
+        const success = res.statusCode >= 200 && res.statusCode < 300;
+        console.log(`📤 rootworm upload: ${success ? '✅ SUCCESS' : '❌ FAILED'} (${res.statusCode})`);
+        resolve(success);
       });
     });
-    req.on('error', () => resolve(false));
+    req.on('error', (err) => {
+      console.log(`❌ rootworm upload error: ${err.message}`);
+      resolve(false);
+    });
     req.write(payload);
     req.end();
   });
